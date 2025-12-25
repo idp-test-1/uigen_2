@@ -2,6 +2,15 @@ name: Hello World
 
 on:
   workflow_dispatch:
+    inputs:
+      message:
+        description: "Message to print"
+        required: true
+        type: string
+      triggered_by:
+        description: "Who triggered this workflow"
+        required: false
+        type: string
   push:
     branches:
       - main
@@ -10,5 +19,7 @@ jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
-      - name: Print Hello World
-        run: echo "Hello World"
+      - name: Print Message
+        run: |
+          echo "Message: ${{ inputs.message }}"
+          echo "Triggered by: ${{ inputs.triggered_by || 'Manual trigger' }}"
