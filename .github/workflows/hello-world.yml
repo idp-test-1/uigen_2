@@ -7,6 +7,10 @@ on:
         description: "Message to print"
         required: true
         type: string
+      triggered_by:
+        description: "Who triggered this workflow"
+        required: false
+        type: string
 
   push:
     branches:
