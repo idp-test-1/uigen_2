@@ -11,10 +11,6 @@ on:
         description: 'Service account client ID'
         required: true
         type: string
-      client-secret:
-        description: 'Service account client secret'
-        required: true
-        type: string
       runId:
         description: 'Unique identifier for the pipeline execution run'
         required: true
@@ -42,7 +38,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "clientId": "${{ inputs.client-id }}",
-              "clientSecret": "${{ inputs.client-secret }}"
+              "clientSecret": "${{ secrets.IDP_CLIENT_SECRET }}"
             }')
 
           TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.token')
