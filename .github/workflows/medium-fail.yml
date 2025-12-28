@@ -1,0 +1,57 @@
+name: Medium Fail
+
+on:
+  workflow_dispatch:
+    inputs:
+      api-url:
+        description: 'Base URL of IDP API'
+        required: true
+        type: string
+      client-id:
+        description: 'Service account client ID'
+        required: true
+        type: string
+      client-secret:
+        description: 'Service account client secret'
+        required: true
+        type: string
+      runId:
+        description: 'Unique identifier for the pipeline execution run'
+        required: true
+        type: string
+      stepId:
+        description: 'Unique identifier for this specific step'
+        required: true
+        type: string
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate work and fail
+        run: |
+          echo "Starting medium fail workflow..."
+          sleep 15
+          echo "Integration test failed"
+          exit 1
+
+      - name: Report failure status
+        if: always()
+        run: |
+          # Authenticate and get token
+          TOKEN_RESPONSE=$(curl -s -X POST "${{ inputs.api-url }}/api/auth/token" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "clientId": "${{ inputs.client-id }}",
+              "clientSecret": "${{ inputs.client-secret }}"
+            }')
+
+          TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.token')
+
+          # Report FAILURE status to IDP API
+          curl -X PATCH "${{ inputs.api-url }}/api/action-runs/${{ inputs.runId }}/steps/${{ inputs.stepId }}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"status": "FAILURE", "error": "Integration test failed"}'
+
+          echo "Reported FAILURE status to IDP API"

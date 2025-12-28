@@ -1,0 +1,65 @@
+name: Medium Success
+
+on:
+  workflow_dispatch:
+    inputs:
+      api-url:
+        description: 'Base URL of IDP API'
+        required: true
+        type: string
+      client-id:
+        description: 'Service account client ID'
+        required: true
+        type: string
+      client-secret:
+        description: 'Service account client secret'
+        required: true
+        type: string
+      runId:
+        description: 'Unique identifier for the pipeline execution run'
+        required: true
+        type: string
+      stepId:
+        description: 'Unique identifier for this specific step'
+        required: true
+        type: string
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate work
+        run: |
+          echo "Starting medium success workflow..."
+          sleep 30
+          echo "Work completed successfully"
+
+      - name: Report status
+        if: always()
+        run: |
+          # Authenticate and get token
+          TOKEN_RESPONSE=$(curl -s -X POST "${{ inputs.api-url }}/api/auth/token" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "clientId": "${{ inputs.client-id }}",
+              "clientSecret": "${{ inputs.client-secret }}"
+            }')
+
+          TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.token')
+
+          # Determine status based on previous steps
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="SUCCESS"
+            BODY='{"status": "SUCCESS", "progress": 100}'
+          else
+            STATUS="FAILURE"
+            BODY='{"status": "FAILURE", "error": "Workflow failed"}'
+          fi
+
+          # Report status to IDP API
+          curl -X PATCH "${{ inputs.api-url }}/api/action-runs/${{ inputs.runId }}/steps/${{ inputs.stepId }}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$BODY"
+
+          echo "Reported $STATUS status to IDP API"
